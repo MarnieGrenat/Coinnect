@@ -1,0 +1,65 @@
+\documentclass[a4paper,10pt]{article}
+\usepackage[margin=1cm]{geometry}
+\usepackage{multicol}
+\usepackage{fancyhdr}
+\usepackage{listings}
+\usepackage{graphicx}
+
+% Metadata
+\title{Trabalho 2 - Coinnect - Modelo Cliente/Servidor (RPC/RMI)}
+\author{Bruno Carlan \\ Gabriela Dellamora \\ Leonardo Ripes \\ Luize Iensse}
+\date{\today}
+
+% Header
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{Pontifícia Universidade Católica do Rio Grande do Sul}
+\fancyhead[R]{Fundamentos de Processamento Paralelo e Distribuído}
+\fancyfoot[C]{\thepage}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+Este documento apresenta o trabalho desenvolvido para a disciplina de Fundamentos de Processamento Paralelo e Distribuído. O projeto implementa um sistema distribuído baseado no modelo Cliente/Servidor, utilizando RPC/RMI para simular operações bancárias.
+
+\end{abstract}
+
+\begin{multicols}{2}
+
+\section{Introdução}
+
+\section{Arquitetura do Sistema}
+
+\subsection{Processo Administração}
+
+\subsection{Processo Agência}
+
+\subsection{Processo Caixa Automático}
+
+\section{Implementação e Controle de Concorrência}
+
+\end{multicols}
+
+\newpage
+
+\section{Resultados e Testes}
+Nesta seção, são apresentados os resultados dos testes realizados e os screenshots de execução dos processos.
+
+%\begin{figure}[h!]
+%    \centering
+%    \includegraphics[width=0.8\textwidth]{screenshot.png}
+%    \caption{screenshot}
+%\end{figure}
+
+\newpage
+
+\section{Código Fonte}
+\lstset{language=go, breaklines=true, basicstyle=\ttfamily\footnotesize}
+\begin{lstlisting}
+// Codigo fonte aqui se necessario (nao deve ser pq vamos entregar codigo junto)
+\end{lstlisting}
+
+
+\end{document}
