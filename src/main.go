@@ -2,8 +2,7 @@ package main
 
 import (
 	"Coinnect-FPPD/src/Client"
-	"Coinnect-FPPD/src/Client/ATM"
-	"Coinnect-FPPD/src/Client/BankBranch"
+	"Coinnect-FPPD/src/Menu"
 	"Coinnect-FPPD/src/Server"
 	Pygmalion "Coinnect-FPPD/src/deps"
 )
@@ -16,11 +15,12 @@ func main() {
 
 	// Inicia o servidor
 	go Server.Run(port)
+	// Garante que o servidor feche graciosamente :)
+	defer Server.Close()
 
 	// Executa uma operação
-	clientOpenAccountCallback := BankBranch.OpenNewAccount("Gabriela", "senhasegura")
-	Client.Call(address, port, clientOpenAccountCallback)
+	callback := Menu.ObtainClientOperation()
 
-	clientCheckBalanceCallback := ATM.CheckBalance(2, "senhasegura")
-	Client.Call(address, port, clientCheckBalanceCallback)
+	// Executa a chamada ao servidor
+	Client.SendOperation(address, port, callback)
 }

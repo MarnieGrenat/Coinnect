@@ -7,6 +7,8 @@ import (
 	"net/rpc"
 )
 
+var listener net.Listener
+
 func Run(port int) {
 	bank := new(BankManager.Bank)
 	bank.Initialize()
@@ -14,19 +16,33 @@ func Run(port int) {
 	// ainda não temos objetos thread-safe
 	// e fugimos da idempotência. Um passo de cada vez 💪
 	rpc.Register(bank)
-	l, err := net.Listen("tcp", fmt.Sprintf(":%d", port))
+	listener, err := net.Listen("tcp", fmt.Sprintf(":%d", port))
 	if err != nil {
 		fmt.Println("Server.Run : Failed to initialize Server : Error=", err)
 		return
 	}
 
+	fmt.Println("Server.Run : LocalHost at=", port)
 	for {
-		fmt.Println("Server.Run : LocalHost at=", port)
-		conn, err := l.Accept()
+		conn, err := listener.Accept()
 		if err != nil {
 			fmt.Println("Server.Run : Failed to accept connection : Error=:", err)
 			continue
 		}
 		go rpc.ServeConn(conn)
+	}
+}
+
+// Close encerra o listener e para de aceitar novas conexões
+func Close() {
+	if listener != nil {
+		err := listener.Close()
+		if err != nil {
+			fmt.Println("Server.Close : Failed to close listener : Error=", err)
+		} else {
+			fmt.Println("Server.Close : Server closed successfully.")
+		}
+	} else {
+		fmt.Println("Server.Close : No active listener found.")
 	}
 }
