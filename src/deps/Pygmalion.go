@@ -1,5 +1,9 @@
 package Pygmalion
 
+// Roubei umas funções de leitura de configuração dos meus serviços.
+// Esse carinha vai facilitar a leitura e configuração do projeto.
+// Tenho um outro leitor de configurações que lê registros do Windows, acho mais fácil de configurar, aí vcs decidem.
+
 import (
 	"fmt"
 	"os"
@@ -38,7 +42,7 @@ func readYaml() map[string]interface{} {
 func ReadString(key string) string {
 	settings := readYaml()
 
-	if value, err := settings[key].(string); err {
+	if value, ok := settings[key].(string); ok {
 		return value
 	}
 	fmt.Println("Pygmalion.ReadString : Key is not an String : Key=" + key)

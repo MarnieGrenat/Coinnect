@@ -4,8 +4,8 @@ import (
 	"fmt"
 )
 
-// Account representa uma conta bancária com nome, senha e saldo.
-type Account struct {
+// account representa uma conta bancária com nome, senha e saldo.
+type account struct {
 	Name     string  // Nome do titular da conta.
 	Password string  // Senha da conta.
 	Balance  float64 // Saldo atual da conta.
@@ -13,18 +13,18 @@ type Account struct {
 
 // Bank representa um banco que gerencia múltiplas contas usando um map para armazenar contas e um ID para controle.
 type Bank struct {
-	accounts map[int64]*Account // Mapeia cada ID de conta para os dados da conta.
+	accounts map[int64]*account // Mapeia cada ID de conta para os dados da conta.
 	nextID   int64              // ID da próxima conta a ser criada.
 }
 
 // Initialize configura o banco inicializando o map de contas e criando uma conta de teste.
 // Ele deve ser chamado antes de outras operações do banco.
 func (b *Bank) Initialize() {
-	b.accounts = make(map[int64]*Account)
+	b.accounts = make(map[int64]*account)
 	b.nextID = 1
 
 	// Conta hardcoded para teste
-	b.accounts[b.nextID] = &Account{
+	b.accounts[b.nextID] = &account{
 		Name:     "n",
 		Password: "p",
 		Balance:  2000,
@@ -39,8 +39,8 @@ func (b *Bank) Initialize() {
 // - result: um ponteiro para um bool que será true se a conta for criada com sucesso.
 // Retorna:
 // - error: um erro, caso a conta não seja criada por algum motivo.
-func (b *Bank) OpenAccount(accountName string, accountPassword string, result *bool) error {
-	b.accounts[b.nextID] = &Account{
+func (b *Bank) OpenAccount(accountName string, accountPassword string, result *int64) error {
+	b.accounts[b.nextID] = &account{
 		Name:     accountName,
 		Password: accountPassword,
 		Balance:  0,
@@ -48,8 +48,8 @@ func (b *Bank) OpenAccount(accountName string, accountPassword string, result *b
 
 	_, accountExists := b.accounts[b.nextID]
 	if accountExists {
+		*result = b.nextID
 		b.nextID++
-		*result = true
 		return nil
 	}
 	return fmt.Errorf("BankManager.OpenAccount : Failed to create a new account : AccountName=%s", accountName)

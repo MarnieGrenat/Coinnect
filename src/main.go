@@ -1,14 +1,26 @@
 package main
+
 import (
-	Pygmalion "./deps/Pygmalion.go"
+	"Coinnect-FPPD/src/Client"
+	"Coinnect-FPPD/src/Client/ATM"
+	"Coinnect-FPPD/src/Client/BankBranch"
+	"Coinnect-FPPD/src/Server"
+	Pygmalion "Coinnect-FPPD/src/deps"
 )
 
 func main() {
+	// Carrega configurações
 	Pygmalion.InitConfigReader("settings.yml", ".")
+	port := Pygmalion.ReadInteger("ServerPort")
+	address := Pygmalion.ReadString("ServerAddr")
 
-	Addr := Pygmalion.ReadString("ServerAddr")
-	Port := Pygmalion.ReadString("ServerPort")
+	// Inicia o servidor
+	go Server.Run(port)
 
-	Server.Initialize(Addr, Port)
-	fmt.Printf("Token: %s\n", Whitelist)
+	// Executa uma operação
+	clientOpenAccountCallback := BankBranch.OpenNewAccount("Gabriela", "senhasegura")
+	Client.Call(address, port, clientOpenAccountCallback)
+
+	clientCheckBalanceCallback := ATM.CheckBalance(2, "senhasegura")
+	Client.Call(address, port, clientCheckBalanceCallback)
 }
