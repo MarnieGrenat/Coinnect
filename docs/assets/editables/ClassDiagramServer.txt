@@ -1,0 +1,41 @@
+classDiagram
+    class Bank {
+        -accounts map[int64]*account
+        -nextID int64
+        -mutex sync.RWMutex
+        +Initialize()
+        +OpenAccount(accountName string, accountPassword string, result *int64) error
+        +CloseAccount(accountID int64, accountPassword string, result *bool) error
+        +Withdraw(accountID int64, accountPassword string, quantity float64, result *bool) error
+        +Deposit(accountID int64, accountPassword string, quantity float64, result *bool) error
+        +PeekBalance(accountID int64, accountPassword string, result *float64) error
+    }
+
+    class account {
+        -Name string
+        -Password string
+        -Balance float64
+        -mutex sync.RWMutex
+    }
+
+    class OpenAccountRequest {
+        +Name string
+        +Password string
+    }
+
+    class AccountAccessRequest {
+        +ID int64
+        +Password string
+    }
+
+    class FundsOperationRequest {
+        +ID int64
+        +Password string
+        +Quantity float64
+    }
+
+    Bank o--> account : "manages"
+    Bank <|.. OpenAccountRequest : "uses for input"
+    Bank <|.. AccountAccessRequest : "uses for input"
+    Bank <|.. FundsOperationRequest : "uses for input"
+

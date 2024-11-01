@@ -1,14 +1,26 @@
 package main
+
 import (
-	Pygmalion "./deps/Pygmalion.go"
+	"Coinnect-FPPD/src/Client"
+	"Coinnect-FPPD/src/Menu"
+	"Coinnect-FPPD/src/Server"
+	Pygmalion "Coinnect-FPPD/src/deps"
 )
 
 func main() {
+	// Carrega configurações
 	Pygmalion.InitConfigReader("settings.yml", ".")
+	port := Pygmalion.ReadInteger("ServerPort")
+	address := Pygmalion.ReadString("ServerAddr")
 
-	Addr := Pygmalion.ReadString("ServerAddr")
-	Port := Pygmalion.ReadString("ServerPort")
+	// Inicia o servidor
+	go Server.Run(port)
+	// Garante que o servidor feche graciosamente :)
+	defer Server.Close()
 
-	Server.Initialize(Addr, Port)
-	fmt.Printf("Token: %s\n", Whitelist)
+	// Executa uma operação
+	callback := Menu.ObtainClientOperation()
+
+	// Executa a chamada ao servidor
+	Client.SendOperation(address, port, callback)
 }

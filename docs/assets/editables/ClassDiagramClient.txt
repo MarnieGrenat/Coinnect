@@ -1,0 +1,27 @@
+classDiagram
+    class Client {
+        +Call(serverAddress string, serverPort int, callback func(*rpc.Client) error)
+    }
+
+    class BankBranch {
+        +OpenNewAccount(name string, password string) func(*rpc.Client) error
+        +CloseAccount(id int64, password string) func(*rpc.Client) error
+        +Withdraw(id int64, password string, quantity float64) func(*rpc.Client) error
+        +Deposit(id int64, password string, quantity float64) func(*rpc.Client) error
+        +CheckBalance(id int64, password string) func(*rpc.Client) error
+    }
+
+    class ATM {
+        +Withdraw(id int64, password string, quantity float64) func(*rpc.Client) error
+        +Deposit(id int64, password string, quantity float64) func(*rpc.Client) error
+        +CheckBalance(id int64, password string) func(*rpc.Client) error
+    }
+
+    class rpc.Client {
+        <<external>>
+    }
+
+    Client --> rpc.Client : Utiliza para comunicação RPC
+    Client o-- BankBranch : Usa callbacks de BankBranch
+    Client o-- ATM : Usa callbacks de ATM
+
