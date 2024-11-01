@@ -5,12 +5,25 @@ import (
 	"net/rpc"
 )
 
+type OpenAccountRequest struct {
+	Name     string
+	Password string
+}
+
+type AccountAccessRequest struct {
+	ID       int64
+	Password string
+}
+
+type FundsOperationRequest struct {
+	ID       int64
+	Password string
+	Quantity float64
+}
+
 func OpenNewAccount(name string, password string) func(*rpc.Client) error {
 	return func(client *rpc.Client) error {
-		request := struct {
-			Name     string
-			Password string
-		}{name, password}
+		request := OpenAccountRequest{name, password}
 
 		var response int64
 
@@ -25,10 +38,7 @@ func OpenNewAccount(name string, password string) func(*rpc.Client) error {
 
 func CloseAccount(id int64, password string) func(*rpc.Client) error {
 	return func(client *rpc.Client) error {
-		request := struct {
-			ID       int64
-			Password string
-		}{id, password}
+		request := AccountAccessRequest{id, password}
 
 		var response bool
 
@@ -43,11 +53,7 @@ func CloseAccount(id int64, password string) func(*rpc.Client) error {
 
 func Withdraw(id int64, password string, quantity float64) func(*rpc.Client) error {
 	return func(client *rpc.Client) error {
-		request := struct {
-			ID       int64
-			Password string
-			Quantity float64
-		}{id, password, quantity}
+		request := FundsOperationRequest{id, password, quantity}
 
 		var response bool
 
@@ -62,11 +68,7 @@ func Withdraw(id int64, password string, quantity float64) func(*rpc.Client) err
 
 func Deposit(id int64, password string, quantity float64) func(*rpc.Client) error {
 	return func(client *rpc.Client) error {
-		request := struct {
-			ID       int64
-			Password string
-			Quantity float64
-		}{id, password, quantity}
+		request := FundsOperationRequest{id, password, quantity}
 
 		var response bool
 
@@ -81,10 +83,7 @@ func Deposit(id int64, password string, quantity float64) func(*rpc.Client) erro
 
 func CheckBalance(id int64, password string) func(*rpc.Client) error {
 	return func(client *rpc.Client) error {
-		request := struct {
-			ID       int64
-			Password string
-		}{id, password}
+		request := AccountAccessRequest{id, password}
 
 		var response float64
 

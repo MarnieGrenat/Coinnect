@@ -2,24 +2,41 @@ package BankManager
 
 import (
 	"fmt"
+	"sync"
 )
 
 // account representa uma conta bancária com nome, senha e saldo.
 type account struct {
-	Name     string  // Nome do titular da conta.
-	Password string  // Senha da conta.
-	Balance  float64 // Saldo atual da conta.
+	Name     string       // Nome do titular da conta.
+	Password string       // Senha da conta.
+	Balance  float64      // Saldo atual da conta.
+	mutex    sync.RWMutex // RWMutex para operações seguras em nível de conta.
 }
 
-// Bank representa um banco que gerencia múltiplas contas usando um map para armazenar contas e um ID para controle.
+// Estruturas auxiliares para requests de login e operações.
+type LoginRequest struct {
+	AccountID       string
+	AccountPassword string
+}
+
+type OperationRequest struct {
+	AccountID       string
+	AccountPassword string
+	Quantity        float64
+}
+
+// Bank representa um banco que gerencia múltiplas contas.
 type Bank struct {
 	accounts map[int64]*account // Mapeia cada ID de conta para os dados da conta.
 	nextID   int64              // ID da próxima conta a ser criada.
+	mutex    sync.RWMutex       // RWMutex para garantir segurança em operações concorrentes em nível de banco.
 }
 
 // Initialize configura o banco inicializando o map de contas e criando uma conta de teste.
-// Ele deve ser chamado antes de outras operações do banco.
 func (b *Bank) Initialize() {
+	b.mutex.Lock()
+	defer b.mutex.Unlock()
+
 	b.accounts = make(map[int64]*account)
 	b.nextID = 1
 
@@ -33,60 +50,44 @@ func (b *Bank) Initialize() {
 }
 
 // OpenAccount cria uma nova conta bancária com o nome e a senha fornecidos.
-// Parâmetros:
-// - accountName: o nome do titular da nova conta.
-// - accountPassword: a senha para a nova conta.
-// - result: um ponteiro para um bool que será true se a conta for criada com sucesso.
-// Retorna:
-// - error: um erro, caso a conta não seja criada por algum motivo.
 func (b *Bank) OpenAccount(accountName string, accountPassword string, result *int64) error {
+	b.mutex.Lock()
+	defer b.mutex.Unlock()
+
 	b.accounts[b.nextID] = &account{
 		Name:     accountName,
 		Password: accountPassword,
 		Balance:  0,
 	}
 
-	_, accountExists := b.accounts[b.nextID]
-	if accountExists {
-		*result = b.nextID
-		b.nextID++
-		return nil
-	}
-	return fmt.Errorf("BankManager.OpenAccount : Failed to create a new account : AccountName=%s", accountName)
+	*result = b.nextID
+	b.nextID++
+	return nil
 }
 
 // CloseAccount fecha a conta com o ID fornecido, após autenticação da senha.
-// Parâmetros:
-// - accountID: o ID da conta a ser fechada.
-// - accountPassword: a senha da conta para autenticação.
-// - result: um ponteiro para um bool que será true se a conta for fechada com sucesso.
-// Retorna:
-// - error: um erro caso a conta não seja fechada, como erro de autenticação.
 func (b *Bank) CloseAccount(accountID int64, accountPassword string, result *bool) error {
-	if b.isAuthenticated(accountID, accountPassword) {
+	_, isAuthenticated := b.getAuthenticatedAccount(accountID, accountPassword)
+	if isAuthenticated {
+		b.mutex.Lock()
+		defer b.mutex.Unlock()
+
 		delete(b.accounts, accountID)
-		_, accountExists := b.accounts[accountID]
-		if !accountExists {
-			*result = true
-			return nil
-		}
-		return fmt.Errorf("BankManager.CloseAccount : Failed to delete account : AccountID=%d", accountID)
+		*result = true
+		return nil
 	}
 	*result = false
 	return fmt.Errorf("BankManager.CloseAccount : Failed to authenticate account : AccountID=%d", accountID)
 }
 
 // Withdraw realiza um saque de uma conta especificada, caso haja saldo suficiente.
-// Parâmetros:
-// - accountID: o ID da conta de onde o valor será retirado.
-// - accountPassword: a senha da conta para autenticação.
-// - quantity: o valor a ser sacado.
-// - result: um ponteiro para um bool que será true se o saque for bem-sucedido.
-// Retorna:
-// - error: um erro caso o saque não seja realizado, como erro de autenticação ou saldo insuficiente.
 func (b *Bank) Withdraw(accountID int64, accountPassword string, quantity float64, result *bool) error {
-	if b.isAuthenticated(accountID, accountPassword) {
-		account := b.accounts[accountID]
+	account, isAuthenticated := b.getAuthenticatedAccount(accountID, accountPassword)
+
+	if isAuthenticated {
+		account.mutex.Lock()
+		defer account.mutex.Unlock()
+
 		if account.Balance >= quantity {
 			account.Balance -= quantity
 			*result = true
@@ -100,16 +101,13 @@ func (b *Bank) Withdraw(accountID int64, accountPassword string, quantity float6
 }
 
 // Deposit adiciona um valor ao saldo de uma conta especificada.
-// Parâmetros:
-// - accountID: o ID da conta que receberá o valor.
-// - accountPassword: a senha da conta para autenticação.
-// - quantity: o valor a ser depositado.
-// - result: um ponteiro para um bool que será true se o depósito for bem-sucedido.
-// Retorna:
-// - error: um erro caso o depósito não seja realizado, como erro de autenticação.
 func (b *Bank) Deposit(accountID int64, accountPassword string, quantity float64, result *bool) error {
-	if b.isAuthenticated(accountID, accountPassword) {
-		account := b.accounts[accountID]
+	account, isAuthenticated := b.getAuthenticatedAccount(accountID, accountPassword)
+
+	if isAuthenticated {
+		account.mutex.Lock()
+		defer account.mutex.Unlock()
+
 		account.Balance += quantity
 		*result = true
 		return nil
@@ -119,15 +117,13 @@ func (b *Bank) Deposit(accountID int64, accountPassword string, quantity float64
 }
 
 // PeekBalance consulta o saldo de uma conta, se a senha estiver correta.
-// Parâmetros:
-// - accountID: o ID da conta que será consultada.
-// - accountPassword: a senha da conta para autenticação.
-// - result: um ponteiro para float64 que armazenará o saldo da conta se a consulta for bem-sucedida.
-// Retorna:
-// - error: um erro caso a consulta não seja realizada, como erro de autenticação.
 func (b *Bank) PeekBalance(accountID int64, accountPassword string, result *float64) error {
-	if b.isAuthenticated(accountID, accountPassword) {
-		account := b.accounts[accountID]
+	account, isAuthenticated := b.getAuthenticatedAccount(accountID, accountPassword)
+
+	if isAuthenticated {
+		account.mutex.RLock()
+		defer account.mutex.RUnlock()
+
 		*result = account.Balance
 		return nil
 	}
@@ -135,14 +131,19 @@ func (b *Bank) PeekBalance(accountID int64, accountPassword string, result *floa
 	return fmt.Errorf("BankManager.PeekBalance : Failed to authenticate account : AccountID=%d", accountID)
 }
 
-// isAuthenticated verifica se a senha fornecida está correta para a conta especificada.
-// Esta função é usada internamente e não deve ser chamada diretamente por outros pacotes.
-// Parâmetros:
-// - accountID: o ID da conta a ser autenticada.
-// - accountPassword: a senha da conta a ser verificada.
-// Retorna:
-// - bool: true se a senha estiver correta, false caso contrário.
-func (b *Bank) isAuthenticated(accountID int64, accountPassword string) bool {
-	accountInfo, accountExists := b.accounts[accountID]
-	return accountExists && (accountInfo.Password == accountPassword)
+func (b *Bank) getAuthenticatedAccount(accountID int64, accountPassword string) (*account, bool) {
+	account, accountExists := b.getAccount(accountID)
+	if accountExists && (account.Password == accountPassword) {
+		return account, true
+	}
+	return nil, false
+}
+
+// getAccount retorna uma conta segura e se ela existe.
+func (b *Bank) getAccount(accountID int64) (*account, bool) {
+	b.mutex.RLock()
+	defer b.mutex.RUnlock()
+
+	info, exists := b.accounts[accountID]
+	return info, exists
 }
