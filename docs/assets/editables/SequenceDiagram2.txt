@@ -1,0 +1,25 @@
+sequenceDiagram
+    participant ATM
+    participant BankBranch
+    participant Client
+    participant Server
+    participant Bank
+
+    Client->>+ATM: Solicitação de operação (e.g., CheckBalance)
+    ATM->>+Client: Prepara requisição RPC
+    Client->>+Server: Envia requisição RPC (e.g., Bank.PeekBalance)
+    Server->>+Bank: Processa a requisição (e.g., PeekBalance)
+    Bank-->>-Server: Retorna resposta (e.g., Saldo da conta)
+    Server-->>-Client: Envia resposta RPC
+    Client->>-ATM: Retorna resultado da operação
+    ATM-->>-Client: Exibe resultado
+
+    Client->>+BankBranch: Solicitação de operação (e.g., Withdraw)
+    BankBranch->>+Client: Prepara requisição RPC
+    Client->>+Server: Envia requisição RPC (e.g., Bank.Withdraw)
+    Server->>+Bank: Processa a requisição (e.g., Withdraw)
+    Bank-->>-Server: Retorna resposta (e.g., Sucesso/Falha)
+    Server-->>-Client: Envia resposta RPC
+    Client->>-BankBranch: Retorna resultado da operação
+    BankBranch-->>-Client: Exibe resultado
+

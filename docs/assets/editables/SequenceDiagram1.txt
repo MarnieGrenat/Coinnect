@@ -1,0 +1,15 @@
+sequenceDiagram
+    participant BankBranch
+    participant Client
+    participant Server
+    participant Bank
+
+    Client->>+BankBranch: Solicitação de operação (e.g., OpenNewAccount)
+    BankBranch->>+Client: Prepara requisição RPC
+    Client->>+Server: Envia requisição RPC (e.g., Bank.OpenAccount)
+    Server->>+Bank: Processa a requisição (e.g., OpenAccount)
+    Bank-->>-Server: Retorna resposta (e.g., ID da conta)
+    Server-->>-Client: Envia resposta RPC
+    Client->>-BankBranch: Retorna resultado da operação
+    BankBranch-->>-Client: Exibe resultado
+
