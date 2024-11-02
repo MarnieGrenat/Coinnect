@@ -5,19 +5,39 @@ import (
 	"Coinnect-FPPD/src/Client/BankBranch"
 	"fmt"
 	"net/rpc"
-	"os"
+	"strconv"
 )
 
-func ObtainClientOperation() func(*rpc.Client) error {
+// Constantes para melhorar a leitura dos switch cases
+type MenuChoice int
 
-	// Menu principal
+const (
+	Exit MenuChoice = iota
+	GoToATM
+	GoToBankBranch
+)
+
+type OperationChoice int
+
+const (
+	Return OperationChoice = iota
+	CheckBalance
+	Deposit
+	Withdraw
+	OpenAccount
+	CloseAccount
+)
+
+// Menu principal
+func ObtainClientOperation() func(*rpc.Client) error {
 	for {
+		fmt.Println("\n--- Menu Principal ---")
 		fmt.Println("\nEscolha uma opção:")
 		fmt.Println("1. Utilizar ATM")
 		fmt.Println("2. Ir a um BankBranch")
 		fmt.Println("3. Sair")
 
-		var choice int
+		var choice MenuChoice
 		fmt.Print("Digite sua escolha: ")
 		_, err := fmt.Scanln(&choice)
 		if err != nil {
@@ -26,36 +46,35 @@ func ObtainClientOperation() func(*rpc.Client) error {
 		}
 
 		switch choice {
-		case 1:
-			operation := menuATM()
+		case Exit:
+			fmt.Println("Encerrando o programa.")
+			return nil
+		case GoToATM:
+			operation := presentATMMenu()
 			if operation != nil {
 				return operation
 			}
-		case 2:
-			operation := menuBankBranch()
+		case GoToBankBranch:
+			operation := presentBankBranchMenu()
 			// Vai retornar nil caso o cliente queira voltar ao menu principal
 			if operation != nil {
 				return operation
 			}
-
-		case 3:
-			fmt.Println("Encerrando o programa.")
-			os.Exit(1)
 		default:
-			fmt.Println("Escolha inválida. Tente novamente.")
+			fmt.Println("Escolha inválida. Tente novamente")
 		}
 	}
 }
 
-func menuATM() func(*rpc.Client) error {
+func presentATMMenu() func(*rpc.Client) error {
 	for {
 		fmt.Println("\n--- Menu ATM ---")
+		fmt.Println("0. Voltar ao menu principal")
 		fmt.Println("1. Consultar saldo")
 		fmt.Println("2. Depositar")
 		fmt.Println("3. Retirar")
-		fmt.Println("4. Voltar ao menu principal")
 
-		var choice int
+		var choice OperationChoice
 		fmt.Print("Digite sua escolha: ")
 		_, err := fmt.Scanln(&choice)
 		if err != nil {
@@ -64,55 +83,34 @@ func menuATM() func(*rpc.Client) error {
 		}
 
 		switch choice {
-		case 1:
-			fmt.Print("Digite o ID da conta: ")
-			var id int64
-			fmt.Scanln(&id)
-			fmt.Print("Digite a senha: ")
-			var password string
-			fmt.Scanln(&password)
-			return ATM.CheckBalance(id, password)
-		case 2:
-			fmt.Print("Digite o ID da conta: ")
-			var id int64
-			fmt.Scanln(&id)
-			fmt.Print("Digite a senha: ")
-			var password string
-			fmt.Scanln(&password)
-			fmt.Print("Digite o valor a depositar: ")
-			var amount float64
-			fmt.Scanln(&amount)
-			return ATM.Deposit(id, password, amount)
-		case 3:
-			fmt.Print("Digite o ID da conta: ")
-			var id int64
-			fmt.Scanln(&id)
-			fmt.Print("Digite a senha: ")
-			var password string
-			fmt.Scanln(&password)
-			fmt.Print("Digite o valor a retirar: ")
-			var amount float64
-			fmt.Scanln(&amount)
-			return ATM.Withdraw(id, password, amount)
-		case 4:
+		case Return:
 			return nil
+		case CheckBalance:
+			id, password := getIDPasswordInput()
+			return ATM.CheckBalance(id, password)
+		case Deposit:
+			id, password, amount := getIDPasswordAmountInput("depositar")
+			return ATM.Deposit(id, password, amount)
+		case Withdraw:
+			id, password, amount := getIDPasswordAmountInput("retirar")
+			return ATM.Withdraw(id, password, amount)
 		default:
 			fmt.Println("Escolha inválida. Tente novamente.")
 		}
 	}
 }
 
-func menuBankBranch() func(*rpc.Client) error {
+func presentBankBranchMenu() func(*rpc.Client) error {
 	for {
 		fmt.Println("\n--- Menu BankBranch ---")
+		fmt.Println("0. Voltar ao menu principal")
 		fmt.Println("1. Consultar saldo")
 		fmt.Println("2. Depositar")
 		fmt.Println("3. Retirar")
 		fmt.Println("4. Abrir nova conta")
 		fmt.Println("5. Fechar conta")
-		fmt.Println("6. Voltar ao menu principal")
 
-		var choice int
+		var choice OperationChoice
 		fmt.Print("Digite sua escolha: ")
 		_, err := fmt.Scanln(&choice)
 		if err != nil {
@@ -121,56 +119,65 @@ func menuBankBranch() func(*rpc.Client) error {
 		}
 
 		switch choice {
-		case 1:
-			fmt.Print("Digite o ID da conta: ")
-			var id int64
-			fmt.Scanln(&id)
-			fmt.Print("Digite a senha: ")
-			var password string
-			fmt.Scanln(&password)
-			return BankBranch.CheckBalance(id, password)
-		case 2:
-			fmt.Print("Digite o ID da conta: ")
-			var id int64
-			fmt.Scanln(&id)
-			fmt.Print("Digite a senha: ")
-			var password string
-			fmt.Scanln(&password)
-			fmt.Print("Digite o valor a depositar: ")
-			var amount float64
-			fmt.Scanln(&amount)
-			return BankBranch.Deposit(id, password, amount)
-		case 3:
-			fmt.Print("Digite o ID da conta: ")
-			var id int64
-			fmt.Scanln(&id)
-			fmt.Print("Digite a senha: ")
-			var password string
-			fmt.Scanln(&password)
-			fmt.Print("Digite o valor a retirar: ")
-			var amount float64
-			fmt.Scanln(&amount)
-			return BankBranch.Withdraw(id, password, amount)
-		case 4:
-			fmt.Print("Digite o nome da nova conta: ")
-			var name string
-			fmt.Scanln(&name)
-			fmt.Print("Digite a senha: ")
-			var password string
-			fmt.Scanln(&password)
-			return BankBranch.OpenNewAccount(name, password)
-		case 5:
-			fmt.Print("Digite o ID da conta: ")
-			var id int64
-			fmt.Scanln(&id)
-			fmt.Print("Digite a senha: ")
-			var password string
-			fmt.Scanln(&password)
-			return BankBranch.CloseAccount(id, password)
-		case 6:
+		case Return:
 			return nil
+		case CheckBalance:
+			id, password := getIDPasswordInput()
+			return BankBranch.CheckBalance(id, password)
+		case Deposit:
+			id, password, amount := getIDPasswordAmountInput("depositar")
+			return BankBranch.Deposit(id, password, amount)
+		case Withdraw:
+			id, password, amount := getIDPasswordAmountInput("")
+			return BankBranch.Withdraw(id, password, amount)
+		case OpenAccount:
+			name, password := getNamePasswordInput()
+			return BankBranch.OpenNewAccount(name, password)
+		case CloseAccount:
+			id, password := getIDPasswordInput()
+			return BankBranch.CloseAccount(id, password)
 		default:
 			fmt.Println("Escolha inválida. Tente novamente.")
 		}
 	}
+}
+
+func getNamePasswordInput() (string, string) {
+	fmt.Print("Digite o nome da nova conta: ")
+	var name string
+	fmt.Scanln(&name)
+
+	fmt.Print("Digite a senha: ")
+	var password string
+	fmt.Scanln(&password)
+
+	return name, password
+}
+
+func getIDPasswordInput() (int, string) {
+	fmt.Print("Digite o ID da conta: ")
+	var stringId string
+	var password string
+
+	_, err := fmt.Scanln(&stringId)
+	if err != nil {
+		fmt.Println("Erro ao ler o ID da conta. Certifique-se de inserir um número válido.")
+	}
+
+	fmt.Print("Digite a senha: ")
+	fmt.Scanln(&password)
+
+	id, _ := strconv.Atoi(stringId)
+	fmt.Printf("ClientID: %d ClientPasswort:%s\n", id, password)
+	return id, password
+}
+
+func getIDPasswordAmountInput(operation string) (int, string, float64) {
+	id, password := getIDPasswordInput()
+
+	fmt.Printf("Digite o valor a %s: ", operation)
+	var amount float64
+	fmt.Scanln(&amount)
+
+	return id, password, amount
 }
