@@ -1,9 +1,30 @@
-package Client
+package main
 
 import (
+	"Coinnect-FPPD/src/Menu"
+	Pygmalion "Coinnect-FPPD/src/deps"
 	"fmt"
 	"net/rpc"
 )
+
+func main() {
+	// Carrega configurações
+	Pygmalion.InitConfigReader("settings.yml", ".")
+	port := Pygmalion.ReadInteger("ServerPort")
+	address := Pygmalion.ReadString("ServerAddr")
+	fmt.Printf("Client.main : Initializing Client : ServerAddress=%s, ServerPort=%d\n", address, port)
+
+	for {
+		// Executa uma operação
+		callback := Menu.ObtainClientOperation()
+		if callback != nil {
+			// Executa a chamada ao servidor
+			SendOperation(address, port, callback)
+			continue
+		}
+		break
+	}
+}
 
 func SendOperation(serverAddress string, serverPort int, callback func(*rpc.Client) error) {
 	// Tenta uma conexão TCP com o banco

@@ -1,13 +1,27 @@
-package Server
+package main
 
 import (
 	BankManager "Coinnect-FPPD/src/Server/Bank"
+	Pygmalion "Coinnect-FPPD/src/deps"
 	"fmt"
 	"net"
 	"net/rpc"
 )
 
 var listener net.Listener
+
+func main() {
+	fmt.Printf("Server.main : Initializing Operations")
+	// Carrega configurações
+	Pygmalion.InitConfigReader("settings.yml", ".")
+	port := Pygmalion.ReadInteger("ServerPort")
+
+	// Inicia o servidor
+	Run(port)
+	// Garante que o servidor feche graciosamente :)
+	defer Close()
+	fmt.Printf("Server.main : Finishing Operations")
+}
 
 func Run(port int) {
 	bank := new(BankManager.Bank)
