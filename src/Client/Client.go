@@ -1,7 +1,7 @@
 package main
 
 import (
-	"Coinnect-FPPD/src/Menu"
+	"Coinnect-FPPD/src/Client/Menu"
 	Pygmalion "Coinnect-FPPD/src/deps"
 	"fmt"
 	"net/rpc"
