@@ -27,8 +27,6 @@ func Run(port int) {
 	bank := new(BankManager.Bank)
 	bank.Initialize()
 
-	// ainda não temos objetos thread-safe
-	// e fugimos da idempotência. Um passo de cada vez 💪
 	rpc.Register(bank)
 	listener, err := net.Listen("tcp", fmt.Sprintf(":%d", port))
 	if err != nil {

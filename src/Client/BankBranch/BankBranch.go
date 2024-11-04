@@ -12,13 +12,13 @@ type OpenAccountRequest struct {
 }
 
 type AccountAccessRequest struct {
-	ID        int
+	AccountID int
 	Password  string
 	RequestID int64
 }
 
 type FundsOperationRequest struct {
-	ID        int
+	AccountID int
 	Password  string
 	Quantity  float64
 	RequestID int64
@@ -86,7 +86,12 @@ func Deposit(id int, password string, quantity float64, requestID int64) func(*r
 
 func CheckBalance(id int, password string, requestID int64) func(*rpc.Client) error {
 	return func(client *rpc.Client) error {
-		request := AccountAccessRequest{id, password, requestID}
+		request := AccountAccessRequest{
+			AccountID: id,
+			Password:  password,
+			RequestID: requestID,
+		}
+		fmt.Printf("Debug: Enviando Request - AccountID=%d, Password=%s, RequestID=%d\n", request.AccountID, request.Password, request.RequestID)
 
 		var response float64
 

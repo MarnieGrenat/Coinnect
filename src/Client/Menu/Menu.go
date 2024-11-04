@@ -155,21 +155,25 @@ func getNamePasswordInput() (string, string) {
 }
 
 func getIDPasswordInput() (int, string) {
-	fmt.Print("Digite o ID da conta: ")
-	var stringId string
-	var password string
+	for {
+		fmt.Print("Digite o ID da conta: ")
+		var stringId string
+		var password string
 
-	_, err := fmt.Scanln(&stringId)
-	if err != nil {
-		fmt.Println("Erro ao ler o ID da conta. Certifique-se de inserir um número válido.")
+		_, err := fmt.Scanln(&stringId)
+		if err != nil {
+			fmt.Println("Erro ao ler o ID da conta. Certifique-se de inserir um número válido.")
+		}
+
+		fmt.Print("Digite a senha: ")
+		fmt.Scanln(&password)
+
+		id, _ := strconv.Atoi(stringId)
+		if id != 0 {
+			return id, password
+		}
+		fmt.Println("Erro: ID da conta não pode ser zero.")
 	}
-
-	fmt.Print("Digite a senha: ")
-	fmt.Scanln(&password)
-
-	id, _ := strconv.Atoi(stringId)
-	fmt.Printf("ClientID: %d ClientPasswort:%s\n", id, password)
-	return id, password
 }
 
 func getIDPasswordAmountInput(operation string) (int, string, float64) {
