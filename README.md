@@ -15,7 +15,6 @@ O projeto **Coinnect-FPPD** é um sistema distribuído baseado no modelo Cliente
 - **Cliente - Caixa Automático (ATM)**: Realiza operações bancárias, como saques, depósitos e consultas de saldo.
 
 ## Estrutura do Projeto
-
 ```plaintext
 Coinnect-FPPD/
 ├── src/
@@ -36,7 +35,17 @@ Coinnect-FPPD/
 ├── Makefile
 └── README.md
 ```
+### Diagrama de Classes - Client
+![image](docs/assets/ClassDiagram%20Client.svg)
 
+### Diagrama de Classes - Server
+![image](docs/assets/ClassDiagram%20Server.svg)
+
+### Diagrama de Sequência - Exemplo 1
+![image](docs/assets/SequenceDiagram%201.svg)
+
+### Diagrama de Sequência - Exemplo 2
+![image](docs/assets/SequenceDiagram%202.svg)
 ## Funcionalidades
 - **Abertura de conta:** Permite que novos usuários criem contas.
 - **Fechamento de conta:** Fecha contas existentes após autenticação.
