@@ -29,7 +29,7 @@ const (
 )
 
 // Menu principal
-func ObtainClientOperation() func(*rpc.Client) error {
+func ObtainClientOperation(requestID int64) func(*rpc.Client) error {
 	for {
 		fmt.Println("\n--- Menu Principal ---")
 		fmt.Println("\nEscolha uma opção:")
@@ -50,12 +50,12 @@ func ObtainClientOperation() func(*rpc.Client) error {
 			fmt.Println("Encerrando o programa.")
 			return nil
 		case GoToATM:
-			operation := presentATMMenu()
+			operation := presentATMMenu(requestID)
 			if operation != nil {
 				return operation
 			}
 		case GoToBankBranch:
-			operation := presentBankBranchMenu()
+			operation := presentBankBranchMenu(requestID)
 			// Vai retornar nil caso o cliente queira voltar ao menu principal
 			if operation != nil {
 				return operation
@@ -66,7 +66,7 @@ func ObtainClientOperation() func(*rpc.Client) error {
 	}
 }
 
-func presentATMMenu() func(*rpc.Client) error {
+func presentATMMenu(requestID int64) func(*rpc.Client) error {
 	for {
 		fmt.Println("\n--- Menu ATM ---")
 		fmt.Println("0. Voltar ao menu principal")
@@ -87,20 +87,20 @@ func presentATMMenu() func(*rpc.Client) error {
 			return nil
 		case CheckBalance:
 			id, password := getIDPasswordInput()
-			return ATM.CheckBalance(id, password)
+			return ATM.CheckBalance(id, password, requestID)
 		case Deposit:
 			id, password, amount := getIDPasswordAmountInput("depositar")
-			return ATM.Deposit(id, password, amount)
+			return ATM.Deposit(id, password, amount, requestID)
 		case Withdraw:
 			id, password, amount := getIDPasswordAmountInput("retirar")
-			return ATM.Withdraw(id, password, amount)
+			return ATM.Withdraw(id, password, amount, requestID)
 		default:
 			fmt.Println("Escolha inválida. Tente novamente.")
 		}
 	}
 }
 
-func presentBankBranchMenu() func(*rpc.Client) error {
+func presentBankBranchMenu(requestID int64) func(*rpc.Client) error {
 	for {
 		fmt.Println("\n--- Menu BankBranch ---")
 		fmt.Println("0. Voltar ao menu principal")
@@ -123,19 +123,19 @@ func presentBankBranchMenu() func(*rpc.Client) error {
 			return nil
 		case CheckBalance:
 			id, password := getIDPasswordInput()
-			return BankBranch.CheckBalance(id, password)
+			return BankBranch.CheckBalance(id, password, requestID)
 		case Deposit:
 			id, password, amount := getIDPasswordAmountInput("depositar")
-			return BankBranch.Deposit(id, password, amount)
+			return BankBranch.Deposit(id, password, amount, requestID)
 		case Withdraw:
 			id, password, amount := getIDPasswordAmountInput("")
-			return BankBranch.Withdraw(id, password, amount)
+			return BankBranch.Withdraw(id, password, amount, requestID)
 		case OpenAccount:
 			name, password := getNamePasswordInput()
-			return BankBranch.OpenNewAccount(name, password)
+			return BankBranch.OpenNewAccount(name, password, requestID)
 		case CloseAccount:
 			id, password := getIDPasswordInput()
-			return BankBranch.CloseAccount(id, password)
+			return BankBranch.CloseAccount(id, password, requestID)
 		default:
 			fmt.Println("Escolha inválida. Tente novamente.")
 		}

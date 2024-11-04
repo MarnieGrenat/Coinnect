@@ -6,24 +6,27 @@ import (
 )
 
 type OpenAccountRequest struct {
-	Name     string
-	Password string
+	Name      string
+	Password  string
+	RequestID int64
 }
 
 type AccountAccessRequest struct {
-	ID       int
-	Password string
+	ID        int
+	Password  string
+	RequestID int64
 }
 
 type FundsOperationRequest struct {
-	ID       int
-	Password string
-	Quantity float64
+	ID        int
+	Password  string
+	Quantity  float64
+	RequestID int64
 }
 
-func OpenNewAccount(name string, password string) func(*rpc.Client) error {
+func OpenNewAccount(name string, password string, requestID int64) func(*rpc.Client) error {
 	return func(client *rpc.Client) error {
-		request := OpenAccountRequest{name, password}
+		request := OpenAccountRequest{name, password, requestID}
 
 		var response int
 
@@ -36,9 +39,9 @@ func OpenNewAccount(name string, password string) func(*rpc.Client) error {
 	}
 }
 
-func CloseAccount(id int, password string) func(*rpc.Client) error {
+func CloseAccount(id int, password string, requestID int64) func(*rpc.Client) error {
 	return func(client *rpc.Client) error {
-		request := AccountAccessRequest{id, password}
+		request := AccountAccessRequest{id, password, requestID}
 
 		var response bool
 
@@ -51,9 +54,9 @@ func CloseAccount(id int, password string) func(*rpc.Client) error {
 	}
 }
 
-func Withdraw(id int, password string, quantity float64) func(*rpc.Client) error {
+func Withdraw(id int, password string, quantity float64, requestID int64) func(*rpc.Client) error {
 	return func(client *rpc.Client) error {
-		request := FundsOperationRequest{id, password, quantity}
+		request := FundsOperationRequest{id, password, quantity, requestID}
 
 		var response bool
 
@@ -66,9 +69,9 @@ func Withdraw(id int, password string, quantity float64) func(*rpc.Client) error
 	}
 }
 
-func Deposit(id int, password string, quantity float64) func(*rpc.Client) error {
+func Deposit(id int, password string, quantity float64, requestID int64) func(*rpc.Client) error {
 	return func(client *rpc.Client) error {
-		request := FundsOperationRequest{id, password, quantity}
+		request := FundsOperationRequest{id, password, quantity, requestID}
 
 		var response bool
 
@@ -81,9 +84,9 @@ func Deposit(id int, password string, quantity float64) func(*rpc.Client) error 
 	}
 }
 
-func CheckBalance(id int, password string) func(*rpc.Client) error {
+func CheckBalance(id int, password string, requestID int64) func(*rpc.Client) error {
 	return func(client *rpc.Client) error {
-		request := AccountAccessRequest{id, password}
+		request := AccountAccessRequest{id, password, requestID}
 
 		var response float64
 
