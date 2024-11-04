@@ -1,7 +1,7 @@
 package main
 
 import (
-	"Coinnect-FPPD/src/Menu"
+	"Coinnect-FPPD/src/Client/Menu"
 	Pygmalion "Coinnect-FPPD/src/deps"
 	"fmt"
 	"net/rpc"
@@ -13,13 +13,14 @@ func main() {
 	port := Pygmalion.ReadInteger("ServerPort")
 	address := Pygmalion.ReadString("ServerAddr")
 	fmt.Printf("Client.main : Initializing Client : ServerAddress=%s, ServerPort=%d\n", address, port)
-
+	var requestID int64 = 1
 	for {
 		// Executa uma operação
-		callback := Menu.ObtainClientOperation()
+		callback := Menu.ObtainClientOperation(requestID)
 		if callback != nil {
 			// Executa a chamada ao servidor
 			SendOperation(address, port, callback)
+			requestID++
 			continue
 		}
 		break

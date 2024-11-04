@@ -1,7 +1,9 @@
-all:
+a:
 	go build ./src/Server/Server.go
 	go build ./src/Client/Client.go
 
-clean:
-	rm -f 	./Server ./Client
+t:
+	go test ./src/Server/Bank
 
+c:
+	rm -f 	./Server ./Client
