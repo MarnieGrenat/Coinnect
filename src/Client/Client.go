@@ -4,8 +4,11 @@ import (
 	"Coinnect-FPPD/src/Client/Menu"
 	Pygmalion "Coinnect-FPPD/src/deps"
 	"fmt"
+	"sync"
 	"net/rpc"
 )
+
+var mutex sync.Mutex
 
 func main() {
 	// Carrega configurações
@@ -19,8 +22,10 @@ func main() {
 		callback := Menu.ObtainClientOperation(requestID)
 		if callback != nil {
 			// Executa a chamada ao servidor
+			mutex.Lock()
 			SendOperation(address, port, callback)
 			requestID++
+			mutex.Unlock()
 			continue
 		}
 		break

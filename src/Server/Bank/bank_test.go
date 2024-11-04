@@ -17,8 +17,8 @@ func TestOpenAccount(t *testing.T) {
 		t.Fatalf("Expected no error, got %v", err)
 	}
 
-	if accountID != 2 { // Verifica se a próxima conta é criada com ID correto
-		t.Errorf("Expected account ID to be 2, got %d", accountID)
+	if accountID != 1 { // Verifica se a próxima conta é criada com ID correto
+		t.Errorf("Expected account ID to be 1, got %d", accountID)
 	}
 }
 

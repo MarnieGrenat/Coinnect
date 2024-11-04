@@ -6,19 +6,21 @@ import (
 )
 
 type AccountAccessRequest struct {
-	ID       int
-	Password string
+	AccountID int
+	Password  string
+	RequstID  int64
 }
 
 type FundsOperationRequest struct {
-	ID       int
-	Password string
-	Quantity float64
+	AccountID int
+	Password  string
+	Quantity  float64
+	RequestID int64
 }
 
 func Withdraw(id int, password string, quantity float64, requestID int64) func(*rpc.Client) error {
 	return func(client *rpc.Client) error {
-		request := FundsOperationRequest{id, password, quantity}
+		request := FundsOperationRequest{id, password, quantity, requestID}
 
 		var response bool
 
@@ -33,7 +35,7 @@ func Withdraw(id int, password string, quantity float64, requestID int64) func(*
 
 func Deposit(id int, password string, quantity float64, requestID int64) func(*rpc.Client) error {
 	return func(client *rpc.Client) error {
-		request := FundsOperationRequest{id, password, quantity}
+		request := FundsOperationRequest{id, password, quantity, requestID}
 
 		var response bool
 
@@ -48,7 +50,7 @@ func Deposit(id int, password string, quantity float64, requestID int64) func(*r
 
 func CheckBalance(id int, password string, requestID int64) func(*rpc.Client) error {
 	return func(client *rpc.Client) error {
-		request := AccountAccessRequest{id, password}
+		request := AccountAccessRequest{id, password, requestID}
 
 		var response float64
 

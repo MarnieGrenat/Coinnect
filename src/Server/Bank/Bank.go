@@ -50,7 +50,7 @@ func (b *Bank) Initialize() {
 	defer b.mutex.Unlock()
 
 	b.accounts = make(map[int]*account)
-	b.nextID = 1
+	b.nextID = 0
 	b.processedRequests = make(map[int64]interface{})
 
 	// Conta hardcoded para teste
@@ -72,7 +72,7 @@ func (b *Bank) OpenAccount(request OpenAccountRequest, result *int) error {
 
 	b.mutex.Lock()
 	defer b.mutex.Unlock()
-	fmt.Printf("BankManager.OpenAccount : Opening a new account : AccountID=%d : Name=%s\n", b.nextID, request.Name)
+	fmt.Printf("BankManager.OpenAccount [RequestID=%d] : Opening a new account : AccountID=%d : Name=%s\n", request.RequestID, b.nextID, request.Name)
 	b.accounts[b.nextID] = &account{
 		Name:     request.Name,
 		Password: request.Password,
@@ -82,7 +82,7 @@ func (b *Bank) OpenAccount(request OpenAccountRequest, result *int) error {
 	*result = b.nextID
 	b.logRequestID(request.RequestID, *result)
 	b.nextID++
-	fmt.Printf("BankManager.OpenAccount : Opened a new account successfully : Next Usable ID=%d\n", b.nextID)
+	fmt.Printf("BankManager.OpenAccount [RequestID=%d] : Opened a new account successfully : Next Usable ID=%d\n", request.RequestID, b.nextID)
 	return nil
 }
 
@@ -98,16 +98,16 @@ func (b *Bank) CloseAccount(request AccountAccessRequest, result *bool) error {
 		b.mutex.Lock()
 		defer b.mutex.Unlock()
 
-		fmt.Printf("BankManager.CloseAccount : Closing account : AccountID=%d : Balance=%.2f : ClientName=%s\n", request.AccountID, account.Balance, account.Name)
+		fmt.Printf("BankManager.CloseAccount [RequestID=%d] : Closing account : AccountID=%d : Balance=%.2f : ClientName=%s\n", request.RequestID, request.AccountID, account.Balance, account.Name)
 		delete(b.accounts, request.AccountID)
 		*result = true
 		b.logRequestID(request.RequestID, *result)
 		return nil
 	}
 	*result = false
-	fmt.Printf("BankManager.CloseAccount : Failed to authenticate account : AccountID=%d : AccountPassword=%s\n", request.AccountID, request.Password)
+	fmt.Printf("BankManager.CloseAccount [RequestID=%d] : Failed to authenticate account : AccountID=%d : AccountPassword=%s\n", request.RequestID, request.AccountID, request.Password)
 	b.logRequestID(request.RequestID, *result)
-	return fmt.Errorf("BankManager.CloseAccount : Failed to authenticate account : AccountID=%d", request.AccountID)
+	return fmt.Errorf("BankManager.CloseAccount [RequestID=%d] : Failed to authenticate account : AccountID=%d", request.RequestID, request.AccountID)
 }
 
 // Withdraw realiza um saque de uma conta especificada, caso haja saldo suficiente.
@@ -127,16 +127,18 @@ func (b *Bank) Withdraw(request FundsOperationRequest, result *bool) error {
 			account.Balance -= request.Quantity
 			*result = true
 			b.logRequestID(request.RequestID, *result)
-			fmt.Printf("BankManager.Withdraw : Withdrawing funds : AccountID=%d : Balance=%.2f : Quantity=%.2f\n", request.AccountID, account.Balance, request.Quantity)
+			fmt.Printf("BankManager.Withdraw [RequestID=%d] : Withdrawing funds : AccountID=%d : Balance=%.2f : Quantity=%.2f\n", request.RequestID, request.AccountID, account.Balance, request.Quantity)
 			return nil
 		}
 		*result = false
 		b.logRequestID(request.RequestID, *result)
-		return fmt.Errorf("BankManager.Withdraw : Insufficient funds for account : AccountID=%d : Quantity=%.2f", request.AccountID, request.Quantity)
+		fmt.Printf("BankManager.Withdraw [RequestID=%d] : Insufficient funds for account : AccountID=%d : Quantity=%.2f\n", request.RequestID, request.AccountID, request.Quantity)
+		return fmt.Errorf("BankManager.Withdraw [RequestID=%d] : Insufficient funds for account : AccountID=%d", request.RequestID, request.AccountID)
 	}
 	*result = false
 	b.logRequestID(request.RequestID, *result)
-	return fmt.Errorf("BankManager.Withdraw : Failed to authenticate account : AccountID=%d", request.AccountID)
+	fmt.Printf("BankManager.Withdraw [RequestID=%d] : Failed to authenticate account : AccountID=%d\n", request.RequestID, request.AccountID)
+	return fmt.Errorf("BankManager.Withdraw [RequestID=%d] : Failed to authenticate account : AccountID=%d", request.RequestID, request.AccountID)
 }
 
 // Deposit adiciona um valor ao saldo de uma conta especificada.
@@ -155,17 +157,19 @@ func (b *Bank) Deposit(request FundsOperationRequest, result *bool) error {
 		account.Balance += request.Quantity
 		*result = true
 		b.logRequestID(request.RequestID, *result)
-		fmt.Printf("BankManager.Deposit : Depositing on account : AccountID=%d : Balance=%.2f : Quantity=%.2f\n", request.AccountID, account.Balance, request.Quantity)
+		fmt.Printf("BankManager.Deposit [RequestID=%d] : Depositing on account : AccountID=%d : Balance=%.2f : Quantity=%.2f\n", request.RequestID, request.AccountID, account.Balance, request.Quantity)
 		return nil
 	}
 	*result = false
 	b.logRequestID(request.RequestID, *result)
-	fmt.Printf("BankManager.Deposit : Failed to authenticate account : AccountID=%d", request.AccountID)
-	return fmt.Errorf("BankManager.Deposit : Failed to authenticate account : AccountID=%d", request.AccountID)
+	fmt.Printf("BankManager.Deposit [RequestID=%d] : Failed to authenticate account : AccountID=%d\n", request.RequestID, request.AccountID)
+	return fmt.Errorf("BankManager.Deposit [RequestID=%d] : Failed to authenticate account : AccountID=%d", request.RequestID, request.AccountID)
 }
 
 // PeekBalance consulta o saldo de uma conta, se a senha estiver correta.
 func (b *Bank) PeekBalance(request AccountAccessRequest, result *float64) error {
+	fmt.Printf("Debug: Request recebido - AccountID=%d, Password=%s, RequestID=%d\n", request.AccountID, request.Password, request.RequestID)
+
 	if previousResult, exists := b.checkRequestID(request.RequestID); exists {
 		*result = previousResult.(float64)
 		return nil
@@ -179,13 +183,13 @@ func (b *Bank) PeekBalance(request AccountAccessRequest, result *float64) error 
 		*result = account.Balance
 		b.logRequestID(request.RequestID, *result)
 
-		fmt.Printf("BankManager.PeekBalance : Peeking balance : AccountID=%d : Balance=%.2f\n", request.AccountID, account.Balance)
+		fmt.Printf("BankManager.PeekBalance [RequestID=%d] : Peeking balance : AccountID=%d : Balance=%.2f\n", request.RequestID, request.AccountID, account.Balance)
 		return nil
 	}
 	*result = -1
 	b.logRequestID(request.RequestID, *result)
-	fmt.Printf("BankManager.PeekBalance : Failed to authenticate account : AccountID=%d : AccountPassword=%s", request.AccountID, request.Password)
-	return fmt.Errorf("BankManager.PeekBalance : Failed to authenticate account : AccountID=%d", request.AccountID)
+	fmt.Printf("BankManager.PeekBalance [RequestID=%d] : Failed to authenticate account : AccountID=%d : AccountPassword=%s\n", request.RequestID, request.AccountID, request.Password)
+	return fmt.Errorf("BankManager.PeekBalance [RequestID=%d] : Failed to authenticate account : AccountID=%d", request.RequestID, request.AccountID)
 }
 
 func (b *Bank) getAuthenticatedAccount(AccountID int, accountPassword string) (*account, bool) {
