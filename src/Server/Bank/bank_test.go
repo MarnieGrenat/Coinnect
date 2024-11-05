@@ -3,13 +3,15 @@ package BankManager
 import (
 	"sync"
 	"testing"
+
+	"github.com/google/uuid"
 )
 
 func TestOpenAccount(t *testing.T) {
 	bank := &Bank{}
 	bank.Initialize()
 
-	request := OpenAccountRequest{Name: "TestUser", Password: "password", RequestID: 1}
+	request := OpenAccountRequest{Name: "TestUser", Password: "password", RequestID: uuid.New().ID()}
 	var accountID int
 
 	err := bank.OpenAccount(request, &accountID)
@@ -27,11 +29,11 @@ func TestCloseAccount_Success(t *testing.T) {
 	bank.Initialize()
 
 	// Criar uma conta para ser fechada
-	request := OpenAccountRequest{Name: "TestUser", Password: "password", RequestID: 2}
+	request := OpenAccountRequest{Name: "TestUser", Password: "password", RequestID: uuid.New().ID()}
 	var accountID int
 	_ = bank.OpenAccount(request, &accountID)
 
-	closeRequest := AccountAccessRequest{AccountID: accountID, Password: "password", RequestID: 3}
+	closeRequest := AccountAccessRequest{AccountID: accountID, Password: "password", RequestID: uuid.New().ID()}
 	var result bool
 
 	err := bank.CloseAccount(closeRequest, &result)
@@ -41,7 +43,7 @@ func TestCloseAccount_Success(t *testing.T) {
 
 	// Verificar se a conta realmente foi removida
 	var balance float64
-	balanceRequest := AccountAccessRequest{AccountID: accountID, Password: "password", RequestID: 4}
+	balanceRequest := AccountAccessRequest{AccountID: accountID, Password: "password", RequestID: uuid.New().ID()}
 	err = bank.PeekBalance(balanceRequest, &balance)
 	if err == nil {
 		t.Errorf("Expected error when peeking balance of closed account, but got none")
@@ -52,11 +54,11 @@ func TestWithdraw_Concurrency(t *testing.T) {
 	bank := &Bank{}
 	bank.Initialize()
 
-	request := OpenAccountRequest{Name: "ConcurrentUser", Password: "password", RequestID: 5}
+	request := OpenAccountRequest{Name: "ConcurrentUser", Password: "password", RequestID: uuid.New().ID()}
 	var accountID int
 	_ = bank.OpenAccount(request, &accountID)
 
-	depositRequest := FundsOperationRequest{AccountID: accountID, Password: "password", Quantity: 1000, RequestID: 6}
+	depositRequest := FundsOperationRequest{AccountID: accountID, Password: "password", Quantity: 1000, RequestID: uuid.New().ID()}
 	var depositResult bool
 	_ = bank.Deposit(depositRequest, &depositResult)
 
@@ -64,21 +66,21 @@ func TestWithdraw_Concurrency(t *testing.T) {
 	numWithdraws := 100
 	for i := 0; i < numWithdraws; i++ {
 		wg.Add(1)
-		go func(requestID int64) {
+		go func() {
 			defer wg.Done()
-			withdrawRequest := FundsOperationRequest{AccountID: accountID, Password: "password", Quantity: 10, RequestID: requestID}
+			withdrawRequest := FundsOperationRequest{AccountID: accountID, Password: "password", Quantity: 10, RequestID: uuid.New().ID()}
 			var withdrawResult bool
 			err := bank.Withdraw(withdrawRequest, &withdrawResult)
 			if err != nil {
 				t.Errorf("Withdraw failed with error: %v", err)
 			}
-		}(int64(i + 7)) // Incrementando o RequestID para cada retirada
+		}()
 	}
 	wg.Wait()
 
 	// Verifica se o saldo está correto após as retiradas
 	var balance float64
-	balanceRequest := AccountAccessRequest{AccountID: accountID, Password: "password", RequestID: 200}
+	balanceRequest := AccountAccessRequest{AccountID: accountID, Password: "password", RequestID: uuid.New().ID()}
 	_ = bank.PeekBalance(balanceRequest, &balance)
 	expectedBalance := 1000 - float64(numWithdraws*10)
 	if balance != expectedBalance {
@@ -90,11 +92,11 @@ func TestDeposit_Idempotency(t *testing.T) {
 	bank := &Bank{}
 	bank.Initialize()
 
-	request := OpenAccountRequest{Name: "IdempotentUser", Password: "password", RequestID: 201}
+	request := OpenAccountRequest{Name: "IdempotentUser", Password: "password", RequestID: uuid.New().ID()}
 	var accountID int
 	_ = bank.OpenAccount(request, &accountID)
 
-	depositRequest := FundsOperationRequest{AccountID: accountID, Password: "password", Quantity: 500, RequestID: 202}
+	depositRequest := FundsOperationRequest{AccountID: accountID, Password: "password", Quantity: 500, RequestID: uuid.New().ID()}
 	var depositResult bool
 
 	// Realiza múltiplos depósitos com o mesmo RequestID para testar idempotência
@@ -106,7 +108,7 @@ func TestDeposit_Idempotency(t *testing.T) {
 	}
 
 	var balance float64
-	balanceRequest := AccountAccessRequest{AccountID: accountID, Password: "password", RequestID: 203}
+	balanceRequest := AccountAccessRequest{AccountID: accountID, Password: "password", RequestID: uuid.New().ID()}
 	_ = bank.PeekBalance(balanceRequest, &balance)
 
 	if balance != 500 {

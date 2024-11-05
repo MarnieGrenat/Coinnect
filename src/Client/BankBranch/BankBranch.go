@@ -8,23 +8,23 @@ import (
 type OpenAccountRequest struct {
 	Name      string
 	Password  string
-	RequestID int64
+	RequestID uint32
 }
 
 type AccountAccessRequest struct {
 	AccountID int
 	Password  string
-	RequestID int64
+	RequestID uint32
 }
 
 type FundsOperationRequest struct {
 	AccountID int
 	Password  string
 	Quantity  float64
-	RequestID int64
+	RequestID uint32
 }
 
-func OpenNewAccount(name string, password string, requestID int64) func(*rpc.Client) error {
+func OpenNewAccount(name string, password string, requestID uint32) func(*rpc.Client) error {
 	return func(client *rpc.Client) error {
 		request := OpenAccountRequest{name, password, requestID}
 
@@ -34,12 +34,12 @@ func OpenNewAccount(name string, password string, requestID int64) func(*rpc.Cli
 		if err != nil {
 			return err
 		}
-		fmt.Printf("BankBranch.OpenNewAccount : Server response=%d", response)
+		fmt.Printf("BankBranch.OpenNewAccount : Account Created : RequestID=%d : ClientID=%d\n", requestID, response)
 		return nil
 	}
 }
 
-func CloseAccount(id int, password string, requestID int64) func(*rpc.Client) error {
+func CloseAccount(id int, password string, requestID uint32) func(*rpc.Client) error {
 	return func(client *rpc.Client) error {
 		request := AccountAccessRequest{id, password, requestID}
 
@@ -49,12 +49,12 @@ func CloseAccount(id int, password string, requestID int64) func(*rpc.Client) er
 		if err != nil {
 			return err
 		}
-		fmt.Printf("BankBranch.CloseAccount : Server response=%t\n", response)
+		fmt.Printf("BankBranch.CloseAccount : Account Closed Successfully : RequestID=%d : ClientID=%d : AccountClosed=%t\n", requestID, request.AccountID, response)
 		return nil
 	}
 }
 
-func Withdraw(id int, password string, quantity float64, requestID int64) func(*rpc.Client) error {
+func Withdraw(id int, password string, quantity float64, requestID uint32) func(*rpc.Client) error {
 	return func(client *rpc.Client) error {
 		request := FundsOperationRequest{id, password, quantity, requestID}
 
@@ -64,12 +64,12 @@ func Withdraw(id int, password string, quantity float64, requestID int64) func(*
 		if err != nil {
 			return err
 		}
-		fmt.Printf("BankBranch.Withdraw : Server response=%t\n", response)
+		fmt.Printf("BankBranch.Withdraw : Operation has succeeded : RequestID=%d : ClientID=%d : HasSucceed=%t\n", requestID, request.AccountID, response)
 		return nil
 	}
 }
 
-func Deposit(id int, password string, quantity float64, requestID int64) func(*rpc.Client) error {
+func Deposit(id int, password string, quantity float64, requestID uint32) func(*rpc.Client) error {
 	return func(client *rpc.Client) error {
 		request := FundsOperationRequest{id, password, quantity, requestID}
 
@@ -79,19 +79,14 @@ func Deposit(id int, password string, quantity float64, requestID int64) func(*r
 		if err != nil {
 			return err
 		}
-		fmt.Printf("BankBranch.Deposit : Server response=%t\n", response)
+		fmt.Printf("BankBranch.Deposit : Operation has succeeded : RequestID=%d : ClientID=%d : HasSucceed=%t\n", requestID, request.AccountID, response)
 		return nil
 	}
 }
 
-func CheckBalance(id int, password string, requestID int64) func(*rpc.Client) error {
+func CheckBalance(id int, password string, requestID uint32) func(*rpc.Client) error {
 	return func(client *rpc.Client) error {
-		request := AccountAccessRequest{
-			AccountID: id,
-			Password:  password,
-			RequestID: requestID,
-		}
-		fmt.Printf("Debug: Enviando Request - AccountID=%d, Password=%s, RequestID=%d\n", request.AccountID, request.Password, request.RequestID)
+		request := AccountAccessRequest{id, password, requestID}
 
 		var response float64
 
@@ -99,7 +94,7 @@ func CheckBalance(id int, password string, requestID int64) func(*rpc.Client) er
 		if err != nil {
 			return err
 		}
-		fmt.Printf("BankBranch.CheckBalance : Server response=%.2f\n", response)
+		fmt.Printf("BankBranch.CheckBalance : Checking Balance : RequestID=%d : ClientID=%d : Balance=%.2f\n", requestID, request.AccountID, response)
 		return nil
 	}
 }

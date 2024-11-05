@@ -4,11 +4,10 @@ import (
 	"Coinnect-FPPD/src/Client/Menu"
 	Pygmalion "Coinnect-FPPD/src/deps"
 	"fmt"
-	"sync"
 	"net/rpc"
-)
 
-var mutex sync.Mutex
+	"github.com/google/uuid"
+)
 
 func main() {
 	// Carrega configurações
@@ -16,16 +15,15 @@ func main() {
 	port := Pygmalion.ReadInteger("ServerPort")
 	address := Pygmalion.ReadString("ServerAddr")
 	fmt.Printf("Client.main : Initializing Client : ServerAddress=%s, ServerPort=%d\n", address, port)
-	var requestID int64 = 1
+
 	for {
 		// Executa uma operação
+
+		requestID := uuid.New().ID()
 		callback := Menu.ObtainClientOperation(requestID)
 		if callback != nil {
 			// Executa a chamada ao servidor
-			mutex.Lock()
 			SendOperation(address, port, callback)
-			requestID++
-			mutex.Unlock()
 			continue
 		}
 		break

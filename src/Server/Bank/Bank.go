@@ -9,20 +9,20 @@ import (
 type OpenAccountRequest struct {
 	Name      string
 	Password  string
-	RequestID int64
+	RequestID uint32
 }
 
 type AccountAccessRequest struct {
 	AccountID int
 	Password  string
-	RequestID int64
+	RequestID uint32
 }
 
 type FundsOperationRequest struct {
 	AccountID int
 	Password  string
 	Quantity  float64
-	RequestID int64
+	RequestID uint32
 }
 
 // account representa uma conta bancária com nome, senha e saldo.
@@ -39,8 +39,8 @@ type Bank struct {
 	nextID   int              // ID da próxima conta a ser criada.
 	mutex    sync.RWMutex     // RWMutex para garantir segurança em operações concorrentes em nível de banco.
 
-	processedRequests map[int64]interface{} // Log de resultados de operações indexados por RequestID
-	requestLogMutex   sync.Mutex            // Mutex para controlar acesso ao log de operações
+	processedRequests map[uint32]interface{} // Log de resultados de operações indexados por RequestID
+	requestLogMutex   sync.Mutex             // Mutex para controlar acesso ao log de operações
 }
 
 // Initialize configura o banco inicializando o map de contas e criando uma conta de teste.
@@ -51,7 +51,7 @@ func (b *Bank) Initialize() {
 
 	b.accounts = make(map[int]*account)
 	b.nextID = 0
-	b.processedRequests = make(map[int64]interface{})
+	b.processedRequests = make(map[uint32]interface{})
 
 	// Conta hardcoded para teste
 	b.accounts[b.nextID] = &account{
@@ -60,7 +60,7 @@ func (b *Bank) Initialize() {
 		Balance:  2000,
 	}
 	b.nextID++
-	fmt.Printf("BankManager.Initialize : Finished initializing : Next usable ID=%d\n", b.nextID)
+	fmt.Printf("BankManager.Initialize : Finished initializing : Next usable ClientID=%d\n", b.nextID)
 }
 
 // OpenAccount cria uma nova conta bancária com o nome e a senha fornecidos.
@@ -168,8 +168,6 @@ func (b *Bank) Deposit(request FundsOperationRequest, result *bool) error {
 
 // PeekBalance consulta o saldo de uma conta, se a senha estiver correta.
 func (b *Bank) PeekBalance(request AccountAccessRequest, result *float64) error {
-	fmt.Printf("Debug: Request recebido - AccountID=%d, Password=%s, RequestID=%d\n", request.AccountID, request.Password, request.RequestID)
-
 	if previousResult, exists := b.checkRequestID(request.RequestID); exists {
 		*result = previousResult.(float64)
 		return nil
@@ -210,16 +208,19 @@ func (b *Bank) getAccount(AccountID int) (*account, bool) {
 }
 
 // Verifica se o RequestID já foi processado
-func (b *Bank) checkRequestID(requestID int64) (interface{}, bool) {
+func (b *Bank) checkRequestID(requestID uint32) (interface{}, bool) {
 	b.requestLogMutex.Lock()
 	defer b.requestLogMutex.Unlock()
 
 	result, exists := b.processedRequests[requestID]
+	if exists {
+		fmt.Printf("BankManager.checkRequestID [RequestID=%d] : Request already replied\n", requestID)
+	}
 	return result, exists
 }
 
 // Registra o resultado de uma operação
-func (b *Bank) logRequestID(requestID int64, result interface{}) {
+func (b *Bank) logRequestID(requestID uint32, result interface{}) {
 	b.requestLogMutex.Lock()
 	defer b.requestLogMutex.Unlock()
 
