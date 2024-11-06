@@ -4,8 +4,7 @@ a:
 	go build ./src/Client/Client.go
 
 t:
-	go test ./src/Server/Bank
-	go test ./src/Client/
+	go test ./src/Server/Bank > test_log.txt
 
 c:
 	rm -f 	./Server ./Client
