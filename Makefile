@@ -1,4 +1,5 @@
 a:
+	rm -f 	./Server ./Client
 	go build ./src/Server/Server.go
 	go build ./src/Client/Client.go
 
