@@ -3,7 +3,6 @@ package BankManager
 import (
 	"fmt"
 	"sync"
-	"time"
 )
 
 // Estruturas auxiliares para requests de login e operações.
@@ -55,8 +54,8 @@ func (b *Bank) Initialize() {
 
 	// Conta hardcoded para teste
 	b.accounts[b.nextID] = &account{
-		Name:     "n",
-		Password: "p",
+		Name:     "teste",
+		Password: "psw",
 		Balance:  2000,
 	}
 	b.nextID++
@@ -175,7 +174,7 @@ func (b *Bank) PeekBalance(request AccountAccessRequest, result *float64) error 
 		*result = previousResult.(float64)
 		return nil
 	}
-	time.Sleep(10 * time.Second)
+	// time.Sleep(10 * time.Second) // Permite que fechemos o servidor antes de enviar resposta
 
 	account, isAuthenticated := b.getAuthenticatedAccount(request.AccountID, request.Password)
 	if !isAuthenticated {

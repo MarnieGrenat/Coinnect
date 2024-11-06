@@ -23,7 +23,9 @@ func main() {
 	fmt.Printf("Client.main : Initializing Client : ServerAddress=%s, ServerPort=%d\n", address, port)
 
 	for {
-		operate(address, port, 3)
+		requestID := uuid.New().ID()
+		callback := Menu.ObtainClientOperation(requestID)
+		operate(address, port, 3, callback)
 	}
 }
 
@@ -34,11 +36,7 @@ func main() {
 // Parameters:
 //   - address: The server address to send the operation to.
 //   - port: The server port to send the operation to.
-func operate(address string, port int, maxTries int) {
-
-	requestID := uuid.New().ID()
-	callback := Menu.ObtainClientOperation(requestID)
-
+func operate(address string, port int, maxTries int, callback func(*rpc.Client) error) {
 	if callback != nil {
 		// Executa a chamada ao servidor
 		waitTime := 5 * time.Second
