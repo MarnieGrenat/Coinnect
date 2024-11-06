@@ -22,10 +22,12 @@ func main() {
 	address := Pygmalion.ReadString("ServerAddr")
 	fmt.Printf("Client.main : Initializing Client : ServerAddress=%s, ServerPort=%d\n", address, port)
 
+	requestID := uuid.New().ID()
 	for {
-		requestID := uuid.New().ID()
 		callback := Menu.ObtainClientOperation(requestID)
-		operate(address, port, 3, callback)
+		if callback != nil {
+			requestID = operate(address, port, 3, callback, requestID)
+		}
 	}
 }
 
@@ -36,33 +38,34 @@ func main() {
 // Parameters:
 //   - address: The server address to send the operation to.
 //   - port: The server port to send the operation to.
-func operate(address string, port int, maxTries int, callback func(*rpc.Client) error) {
-	if callback != nil {
-		// Executa a chamada ao servidor
-		waitTime := 5 * time.Second
-		for tries := 1; tries <= maxTries; tries++ {
-			err := SendOperation(address, port, callback)
+func operate(address string, port int, maxTries int, callback func(*rpc.Client) error, requestID uint32) uint32 {
+	waitTime := 5 * time.Second
+	for tries := 1; tries <= maxTries; tries++ {
+		err := SendOperation(address, port, callback)
 
-			// Verifica se a operação foi feita com sucesso
-			if err == nil {
-				break
-			}
+		// Verifica se a operação foi feita com sucesso
+		if err == nil {
+			// Atualiza RequestID caso sucesso
+			return uuid.New().ID()
+		}
 
-			// Verifica se o erro recebido pertence ao BankManager (erro tratado)
-			if strings.Contains(err.Error(), "BankManager") {
-				fmt.Printf("Client.SendOperation : Detected BankManager error : Err=%s\n", err)
-				break
-			}
+		// Verifica se o erro recebido pertence ao BankManager (erro tratado)
+		if strings.Contains(err.Error(), "BankManager") {
+			fmt.Printf("Client.SendOperation : Detected BankManager error : Err=%s\n", err)
+			// Atualiza RequestID caso erro tratado do BankManager
+			return uuid.New().ID()
+		}
 
-			fmt.Printf("Client.SendOperation [Tries=%d] : Callback execution failed : Error=%s\n", tries, err)
-			time.Sleep(waitTime)
-			waitTime *= 2
+		fmt.Printf("Client.SendOperation [Tries=%d] : Callback execution failed : Error=%s\n", tries, err)
+		time.Sleep(waitTime)
+		waitTime *= 2
 
-			if tries == maxTries { // remove warning
-				fmt.Println("Client.main : All retry attempts failed.")
-			}
+		if tries == maxTries { // remove warning
+			fmt.Println("Client.main : All retry attempts failed.")
 		}
 	}
+	// Retorna o mesmo requestID caso o erro seja conexão. Isso garante a mesma resposta caso
+	return requestID
 }
 
 // SendOperation attempts to establish a TCP connection to the specified server
