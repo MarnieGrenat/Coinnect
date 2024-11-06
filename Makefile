@@ -5,6 +5,7 @@ a:
 
 t:
 	go test ./src/Server/Bank
+	go test ./src/Client/
 
 c:
 	rm -f 	./Server ./Client
