@@ -7,6 +7,9 @@ import (
 	"github.com/google/uuid"
 )
 
+const CONCURRENCY_QUANTITY int = 1000
+const IDEMPONTENCY_QUANTITY int = 10000
+
 func TestOpenAccount(t *testing.T) {
 	bank := &Bank{}
 	bank.Initialize()
@@ -58,17 +61,20 @@ func TestWithdraw_Concurrency(t *testing.T) {
 	var accountID int
 	_ = bank.OpenAccount(request, &accountID)
 
-	depositRequest := FundsOperationRequest{AccountID: accountID, Password: "password", Quantity: 1000, RequestID: uuid.New().ID()}
+	var totalFunds float64 = 1000000000000
+	var withdrawFunds float64 = 1
+
+	depositRequest := FundsOperationRequest{AccountID: accountID, Password: "password", Quantity: totalFunds, RequestID: uuid.New().ID()}
 	var depositResult bool
 	_ = bank.Deposit(depositRequest, &depositResult)
 
 	var wg sync.WaitGroup
-	numWithdraws := 100
+	numWithdraws := CONCURRENCY_QUANTITY
 	for i := 0; i < numWithdraws; i++ {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
-			withdrawRequest := FundsOperationRequest{AccountID: accountID, Password: "password", Quantity: 10, RequestID: uuid.New().ID()}
+			withdrawRequest := FundsOperationRequest{AccountID: accountID, Password: "password", Quantity: withdrawFunds, RequestID: uuid.New().ID()}
 			var withdrawResult bool
 			err := bank.Withdraw(withdrawRequest, &withdrawResult)
 			if err != nil {
@@ -82,7 +88,7 @@ func TestWithdraw_Concurrency(t *testing.T) {
 	var balance float64
 	balanceRequest := AccountAccessRequest{AccountID: accountID, Password: "password", RequestID: uuid.New().ID()}
 	_ = bank.PeekBalance(balanceRequest, &balance)
-	expectedBalance := 1000 - float64(numWithdraws*10)
+	expectedBalance := totalFunds - float64(numWithdraws*int(withdrawFunds))
 	if balance != expectedBalance {
 		t.Errorf("Expected balance to be %.2f, got %.2f", expectedBalance, balance)
 	}
@@ -100,7 +106,7 @@ func TestDeposit_Idempotency(t *testing.T) {
 	var depositResult bool
 
 	// Realiza múltiplos depósitos com o mesmo RequestID para testar idempotência
-	for i := 0; i < 3; i++ {
+	for i := 0; i < IDEMPONTENCY_QUANTITY; i++ {
 		err := bank.Deposit(depositRequest, &depositResult)
 		if err != nil {
 			t.Errorf("Deposit failed with error: %v", err)
