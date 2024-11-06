@@ -73,6 +73,9 @@ Cada operação RPC possui um identificador único associado à solicitação in
 \subsection{Testes de Idempotência}
 
 O controle de idempotência foi testado simulando falhas e repetição de operações. Por exemplo, em um teste de saque duplicado, duas requisições idênticas foram enviadas para sacar o mesmo valor de uma conta. O sistema reconheceu a segunda solicitação como repetida e retornou o mesmo resultado da primeira operação, sem duplicar o saque. Esse tipo de teste foi aplicado em diversas operações para garantir que as ações idempotentes funcionavam conforme esperado, e que o sistema mantinha sua integridade mesmo sob falhas.
+Este controle de idempotência é particularmente eficaz contra falhas de rede, onde operações podem ser reenviadas inadvertidamente por tentativas de reconexão do cliente. A reutilização do resultado da operação anterior evita inconsistências no banco de dados.
+Durante os testes de idempotência, foram realizadas simulações de falhas de rede onde operações idênticas foram reenviadas após tentativas falhas de conexão. Esse teste verificou que a reutilização do \textit{RequestID} manteve a consistência do sistema, mesmo sob condições de rede instáveis.
+
 
 \section{Conclusão}
 
