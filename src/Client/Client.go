@@ -52,6 +52,7 @@ func operate(address string, port int, maxTries int) {
 
 			// Verifica se o erro recebido pertence ao BankManager (erro tratado)
 			if strings.Contains(err.Error(), "BankManager") {
+				fmt.Printf("Client.SendOperation : Detected BankManager error : Err=%s\n", err)
 				break
 			}
 
