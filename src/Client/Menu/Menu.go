@@ -29,7 +29,7 @@ const (
 )
 
 // Menu principal
-func ObtainClientOperation(requestID int64) func(*rpc.Client) error {
+func ObtainClientOperation(requestID uint32) func(*rpc.Client) error {
 	for {
 		fmt.Println("\n--- Menu Principal ---")
 		fmt.Println("\nEscolha uma opção:")
@@ -66,7 +66,7 @@ func ObtainClientOperation(requestID int64) func(*rpc.Client) error {
 	}
 }
 
-func presentATMMenu(requestID int64) func(*rpc.Client) error {
+func presentATMMenu(requestID uint32) func(*rpc.Client) error {
 	for {
 		fmt.Println("\n--- Menu ATM ---")
 		fmt.Println("0. Voltar ao menu principal")
@@ -100,7 +100,7 @@ func presentATMMenu(requestID int64) func(*rpc.Client) error {
 	}
 }
 
-func presentBankBranchMenu(requestID int64) func(*rpc.Client) error {
+func presentBankBranchMenu(requestID uint32) func(*rpc.Client) error {
 	for {
 		fmt.Println("\n--- Menu BankBranch ---")
 		fmt.Println("0. Voltar ao menu principal")
@@ -155,25 +155,21 @@ func getNamePasswordInput() (string, string) {
 }
 
 func getIDPasswordInput() (int, string) {
-	for {
-		fmt.Print("Digite o ID da conta: ")
-		var stringId string
-		var password string
+	fmt.Print("Digite o ID da conta: ")
+	var stringId string
+	var password string
 
-		_, err := fmt.Scanln(&stringId)
-		if err != nil {
-			fmt.Println("Erro ao ler o ID da conta. Certifique-se de inserir um número válido.")
-		}
-
-		fmt.Print("Digite a senha: ")
-		fmt.Scanln(&password)
-
-		id, _ := strconv.Atoi(stringId)
-		if id != 0 {
-			return id, password
-		}
-		fmt.Println("Erro: ID da conta não pode ser zero.")
+	_, err := fmt.Scanln(&stringId)
+	if err != nil {
+		fmt.Println("Erro ao ler o ID da conta. Certifique-se de inserir um número válido.")
 	}
+
+	fmt.Print("Digite a senha: ")
+	fmt.Scanln(&password)
+
+	id, _ := strconv.Atoi(stringId)
+
+	return id, password
 }
 
 func getIDPasswordAmountInput(operation string) (int, string, float64) {
